@@ -41,139 +41,115 @@ const FINGER_NAMES = { "1": "검지", "2": "중지", "3": "약지", "4": "새끼
 
 // Phase 4: 코드 운지 데이터
 //  줄 1=얇은 고음E … 6=굵은 저음E. fret: 0=개방, 'x'=뮤트, 양수=프렛. finger: '1'~'4'/null.
+const STRING_ORDER = [6, 5, 4, 3, 2, 1];
+function defineChord(name, group, frets, fingers) {
+  if (frets.length !== 6 || fingers.length !== 6) {
+    throw new Error(`Invalid chord voicing: ${name}`);
+  }
+  return {
+    name,
+    group,
+    voicing: STRING_ORDER.map((string, i) => ({
+      string,
+      fret: frets[i],
+      finger: fingers[i] ?? null,
+    })),
+  };
+}
+
+// 01 Source/chords/manifest.json의 60개 코드 자료를 목표 코드로 매핑.
 const CHORDS = {
-  C: { name: "C", voicing: [
-    { string: 6, fret: "x", finger: null },
-    { string: 5, fret: 3, finger: "3" },
-    { string: 4, fret: 2, finger: "2" },
-    { string: 3, fret: 0, finger: null },
-    { string: 2, fret: 1, finger: "1" },
-    { string: 1, fret: 0, finger: null },
-  ] },
-  G: { name: "G", voicing: [
-    { string: 6, fret: 3, finger: "2" },
-    { string: 5, fret: 2, finger: "1" },
-    { string: 4, fret: 0, finger: null },
-    { string: 3, fret: 0, finger: null },
-    { string: 2, fret: 0, finger: null },
-    { string: 1, fret: 3, finger: "3" },
-  ] },
-  D: { name: "D", voicing: [
-    { string: 6, fret: "x", finger: null },
-    { string: 5, fret: "x", finger: null },
-    { string: 4, fret: 0, finger: null },
-    { string: 3, fret: 2, finger: "1" },
-    { string: 2, fret: 3, finger: "3" },
-    { string: 1, fret: 2, finger: "2" },
-  ] },
-  A: { name: "A", voicing: [
-    { string: 6, fret: "x", finger: null },
-    { string: 5, fret: 0, finger: null },
-    { string: 4, fret: 2, finger: "1" },
-    { string: 3, fret: 2, finger: "2" },
-    { string: 2, fret: 2, finger: "3" },
-    { string: 1, fret: 0, finger: null },
-  ] },
-  E: { name: "E", voicing: [
-    { string: 6, fret: 0, finger: null },
-    { string: 5, fret: 2, finger: "2" },
-    { string: 4, fret: 2, finger: "3" },
-    { string: 3, fret: 1, finger: "1" },
-    { string: 2, fret: 0, finger: null },
-    { string: 1, fret: 0, finger: null },
-  ] },
-  Am: { name: "Am", voicing: [
-    { string: 6, fret: "x", finger: null },
-    { string: 5, fret: 0, finger: null },
-    { string: 4, fret: 2, finger: "2" },
-    { string: 3, fret: 2, finger: "3" },
-    { string: 2, fret: 1, finger: "1" },
-    { string: 1, fret: 0, finger: null },
-  ] },
-  Em: { name: "Em", voicing: [
-    { string: 6, fret: 0, finger: null },
-    { string: 5, fret: 2, finger: "2" },
-    { string: 4, fret: 2, finger: "3" },
-    { string: 3, fret: 0, finger: null },
-    { string: 2, fret: 0, finger: null },
-    { string: 1, fret: 0, finger: null },
-  ] },
-  Dm: { name: "Dm", voicing: [
-    { string: 6, fret: "x", finger: null },
-    { string: 5, fret: "x", finger: null },
-    { string: 4, fret: 0, finger: null },
-    { string: 3, fret: 2, finger: "2" },
-    { string: 2, fret: 3, finger: "3" },
-    { string: 1, fret: 1, finger: "1" },
-  ] },
-  // ── 세븐스 ──
-  A7: { name: "A7", voicing: [
-    { string: 6, fret: "x", finger: null },
-    { string: 5, fret: 0, finger: null },
-    { string: 4, fret: 2, finger: "2" },
-    { string: 3, fret: 0, finger: null },
-    { string: 2, fret: 2, finger: "3" },
-    { string: 1, fret: 0, finger: null },
-  ] },
-  D7: { name: "D7", voicing: [
-    { string: 6, fret: "x", finger: null },
-    { string: 5, fret: "x", finger: null },
-    { string: 4, fret: 0, finger: null },
-    { string: 3, fret: 2, finger: "2" },
-    { string: 2, fret: 1, finger: "1" },
-    { string: 1, fret: 2, finger: "3" },
-  ] },
-  E7: { name: "E7", voicing: [
-    { string: 6, fret: 0, finger: null },
-    { string: 5, fret: 2, finger: "2" },
-    { string: 4, fret: 0, finger: null },
-    { string: 3, fret: 1, finger: "1" },
-    { string: 2, fret: 0, finger: null },
-    { string: 1, fret: 0, finger: null },
-  ] },
-  G7: { name: "G7", voicing: [
-    { string: 6, fret: 3, finger: "3" },
-    { string: 5, fret: 2, finger: "2" },
-    { string: 4, fret: 0, finger: null },
-    { string: 3, fret: 0, finger: null },
-    { string: 2, fret: 0, finger: null },
-    { string: 1, fret: 1, finger: "1" },
-  ] },
-  C7: { name: "C7", voicing: [
-    { string: 6, fret: "x", finger: null },
-    { string: 5, fret: 3, finger: "3" },
-    { string: 4, fret: 2, finger: "2" },
-    { string: 3, fret: 3, finger: "4" },
-    { string: 2, fret: 1, finger: "1" },
-    { string: 1, fret: 0, finger: null },
-  ] },
-  // ── 기타 ──
-  Cadd9: { name: "Cadd9", voicing: [
-    { string: 6, fret: "x", finger: null },
-    { string: 5, fret: 3, finger: "2" },
-    { string: 4, fret: 2, finger: "1" },
-    { string: 3, fret: 0, finger: null },
-    { string: 2, fret: 3, finger: "3" },
-    { string: 1, fret: 0, finger: null },
-  ] },
-  // ── 바레(고급): 검지가 한 프렛의 여러 줄을 동시에 누름 ──
-  F: { name: "F", voicing: [
-    { string: 6, fret: 1, finger: "1" },
-    { string: 5, fret: 3, finger: "3" },
-    { string: 4, fret: 3, finger: "4" },
-    { string: 3, fret: 2, finger: "2" },
-    { string: 2, fret: 1, finger: "1" },
-    { string: 1, fret: 1, finger: "1" },
-  ] },
-  Bm: { name: "Bm", voicing: [
-    { string: 6, fret: "x", finger: null },
-    { string: 5, fret: 2, finger: "1" },
-    { string: 4, fret: 4, finger: "3" },
-    { string: 3, fret: 4, finger: "4" },
-    { string: 2, fret: 3, finger: "2" },
-    { string: 1, fret: 2, finger: "1" },
-  ] },
+  // Major
+  A: defineChord("A", "메이저", ["x", 0, 2, 2, 2, 0], [null, null, "1", "2", "3", null]),
+  B: defineChord("B", "메이저", ["x", 2, 4, 4, 4, 2], [null, "1", "3", "3", "3", "1"]),
+  C: defineChord("C", "메이저", ["x", 3, 2, 0, 1, 0], [null, "3", "2", null, "1", null]),
+  D: defineChord("D", "메이저", ["x", "x", 0, 2, 3, 2], [null, null, null, "1", "3", "2"]),
+  E: defineChord("E", "메이저", [0, 2, 2, 1, 0, 0], [null, "2", "3", "1", null, null]),
+  F: defineChord("F", "메이저", [1, 3, 3, 2, 1, 1], ["1", "3", "4", "2", "1", "1"]),
+  G: defineChord("G", "메이저", [3, 2, 0, 0, 0, 3], ["2", "1", null, null, null, "3"]),
+
+  // Dominant 7
+  A7: defineChord("A7", "7th", ["x", 0, 2, 0, 2, 0], [null, null, "2", null, "3", null]),
+  B7: defineChord("B7", "7th", ["x", 2, 1, 2, 0, 2], [null, "2", "1", "3", null, "4"]),
+  C7: defineChord("C7", "7th", ["x", 3, 2, 3, 1, 0], [null, "3", "2", "4", "1", null]),
+  D7: defineChord("D7", "7th", ["x", "x", 0, 2, 1, 2], [null, null, null, "2", "1", "3"]),
+  E7: defineChord("E7", "7th", [0, 2, 0, 1, 0, 0], [null, "2", null, "1", null, null]),
+  F7: defineChord("F7", "7th", [1, 3, 1, 2, 1, 1], ["1", "3", "1", "2", "1", "1"]),
+  G7: defineChord("G7", "7th", [3, 2, 0, 0, 0, 1], ["3", "2", null, null, null, "1"]),
+
+  // Major 7
+  AM7: defineChord("AM7", "Major 7", ["x", 0, 2, 1, 2, 0], [null, null, "2", "1", "3", null]),
+  BM7: defineChord("BM7", "Major 7", ["x", 2, 4, 3, 4, 2], [null, "1", "3", "2", "4", "1"]),
+  CM7: defineChord("CM7", "Major 7", ["x", 3, 2, 0, 0, 0], [null, "3", "2", null, null, null]),
+  DM7: defineChord("DM7", "Major 7", ["x", "x", 0, 2, 2, 2], [null, null, null, "1", "1", "1"]),
+  EM7: defineChord("EM7", "Major 7", [0, 2, 1, 1, 0, 0], [null, "2", "1", "1", null, null]),
+  FM7: defineChord("FM7", "Major 7", ["x", "x", 3, 2, 1, 0], [null, null, "3", "2", "1", null]),
+  GM7: defineChord("GM7", "Major 7", [3, 2, 0, 0, 0, 2], ["2", "1", null, null, null, "3"]),
+
+  // Minor
+  Am: defineChord("Am", "마이너", ["x", 0, 2, 2, 1, 0], [null, null, "2", "3", "1", null]),
+  Bm: defineChord("Bm", "마이너", ["x", 2, 4, 4, 3, 2], [null, "1", "3", "4", "2", "1"]),
+  Cm: defineChord("Cm", "마이너", ["x", 3, 5, 5, 4, 3], [null, "1", "3", "4", "2", "1"]),
+  "C#m": defineChord("C#m", "마이너", ["x", 4, 6, 6, 5, 4], [null, "1", "3", "4", "2", "1"]),
+  Dm: defineChord("Dm", "마이너", ["x", "x", 0, 2, 3, 1], [null, null, null, "2", "3", "1"]),
+  Em: defineChord("Em", "마이너", [0, 2, 2, 0, 0, 0], [null, "2", "3", null, null, null]),
+  Fm: defineChord("Fm", "마이너", [1, 3, 3, 1, 1, 1], ["1", "3", "4", "1", "1", "1"]),
+  "F#m": defineChord("F#m", "마이너", [2, 4, 4, 2, 2, 2], ["1", "3", "4", "1", "1", "1"]),
+  Gm: defineChord("Gm", "마이너", [3, 5, 5, 3, 3, 3], ["1", "3", "4", "1", "1", "1"]),
+
+  // Minor 7
+  Am7: defineChord("Am7", "minor7", ["x", 0, 2, 0, 1, 0], [null, null, "2", null, "1", null]),
+  Bm7: defineChord("Bm7", "minor7", ["x", 2, 4, 2, 3, 2], [null, "1", "3", "1", "2", "1"]),
+  Cm7: defineChord("Cm7", "minor7", ["x", 3, 5, 3, 4, 3], [null, "1", "3", "1", "2", "1"]),
+  "C#m7": defineChord("C#m7", "minor7", ["x", 4, 6, 4, 5, 4], [null, "1", "3", "1", "2", "1"]),
+  Dm7: defineChord("Dm7", "minor7", ["x", "x", 0, 2, 1, 1], [null, null, null, "2", "1", "1"]),
+  Em7: defineChord("Em7", "minor7", [0, 2, 0, 0, 0, 0], [null, "2", null, null, null, null]),
+  Fm7: defineChord("Fm7", "minor7", [1, 3, 1, 1, 1, 1], ["1", "3", "1", "1", "1", "1"]),
+  "F#m7": defineChord("F#m7", "minor7", [2, 4, 2, 2, 2, 2], ["1", "3", "1", "1", "1", "1"]),
+  Gm7: defineChord("Gm7", "minor7", [3, 5, 3, 3, 3, 3], ["1", "3", "1", "1", "1", "1"]),
+
+  // 6th
+  A6: defineChord("A6", "6th", ["x", 0, 2, 2, 2, 2], [null, null, "1", "1", "1", "1"]),
+  B6: defineChord("B6", "6th", ["x", 2, 4, 4, 4, 4], [null, "1", "3", "3", "3", "3"]),
+  C6: defineChord("C6", "6th", ["x", 3, 2, 2, 1, 0], [null, "3", "2", "4", "1", null]),
+  D6: defineChord("D6", "6th", ["x", "x", 0, 2, 0, 2], [null, null, null, "1", null, "2"]),
+  E6: defineChord("E6", "6th", [0, 2, 2, 1, 2, 0], [null, "2", "3", "1", "4", null]),
+  F6: defineChord("F6", "6th", [1, "x", 3, 2, 3, 1], ["1", null, "3", "2", "4", "1"]),
+  G6: defineChord("G6", "6th", [3, 2, 0, 0, 0, 0], ["2", "1", null, null, null, null]),
+
+  // sus4
+  Asus4: defineChord("Asus4", "sus4", ["x", 0, 2, 2, 3, 0], [null, null, "1", "2", "3", null]),
+  Bsus4: defineChord("Bsus4", "sus4", ["x", 2, 4, 4, 5, 2], [null, "1", "2", "3", "4", "1"]),
+  Csus4: defineChord("Csus4", "sus4", ["x", 3, 3, 0, 1, 1], [null, "3", "4", null, "1", "1"]),
+  Dsus4: defineChord("Dsus4", "sus4", ["x", "x", 0, 2, 3, 3], [null, null, null, "1", "3", "4"]),
+  Esus4: defineChord("Esus4", "sus4", [0, 2, 2, 2, 0, 0], [null, "1", "2", "3", null, null]),
+  Fsus4: defineChord("Fsus4", "sus4", [1, 3, 3, 3, 1, 1], ["1", "2", "3", "4", "1", "1"]),
+  Gsus4: defineChord("Gsus4", "sus4", [3, 3, 0, 0, 1, 3], ["2", "3", null, null, "1", "4"]),
+
+  // 7sus4
+  A7sus4: defineChord("A7sus4", "7sus4", ["x", 0, 2, 0, 3, 0], [null, null, "2", null, "3", null]),
+  B7sus4: defineChord("B7sus4", "7sus4", ["x", 2, 4, 2, 5, 2], [null, "1", "3", "1", "4", "1"]),
+  C7sus4: defineChord("C7sus4", "7sus4", ["x", 3, 5, 3, 6, 3], [null, "1", "3", "1", "4", "1"]),
+  D7sus4: defineChord("D7sus4", "7sus4", ["x", "x", 0, 2, 1, 3], [null, null, null, "2", "1", "4"]),
+  E7sus4: defineChord("E7sus4", "7sus4", [0, 2, 0, 2, 0, 0], [null, "2", null, "3", null, null]),
+  F7sus4: defineChord("F7sus4", "7sus4", [1, 3, 1, 3, 1, 1], ["1", "3", "1", "4", "1", "1"]),
+  G7sus4: defineChord("G7sus4", "7sus4", [3, 3, 0, 0, 1, 1], ["3", "4", null, null, "1", "1"]),
+
+  // Extra from the original MVP prompt
+  Cadd9: defineChord("Cadd9", "기타", ["x", 3, 2, 0, 3, 0], [null, "2", "1", null, "3", null]),
 };
+
+const CHORD_SELECT_GROUPS = [
+  { label: "메이저", keys: ["C", "D", "E", "F", "G", "A", "B"] },
+  { label: "마이너", keys: ["Am", "Bm", "Cm", "C#m", "Dm", "Em", "Fm", "F#m", "Gm"] },
+  { label: "7th", keys: ["A7", "B7", "C7", "D7", "E7", "F7", "G7"] },
+  { label: "Major 7", keys: ["AM7", "BM7", "CM7", "DM7", "EM7", "FM7", "GM7"] },
+  { label: "minor7", keys: ["Am7", "Bm7", "Cm7", "C#m7", "Dm7", "Em7", "Fm7", "F#m7", "Gm7"] },
+  { label: "6th", keys: ["A6", "B6", "C6", "D6", "E6", "F6", "G6"] },
+  { label: "sus4", keys: ["Asus4", "Bsus4", "Csus4", "Dsus4", "Esus4", "Fsus4", "Gsus4"] },
+  { label: "7sus4", keys: ["A7sus4", "B7sus4", "C7sus4", "D7sus4", "E7sus4", "F7sus4", "G7sus4"] },
+  { label: "기타", keys: ["Cadd9"] },
+];
 
 // HAND_CONNECTIONS: 라이브러리 정적 값을 우선 사용, 없으면 폴백.
 const HAND_CONNECTIONS =
@@ -231,6 +207,28 @@ const els = {
   voiceToggle: $("voiceToggle"),
 };
 
+function populateChordSelect() {
+  els.chordSelect.innerHTML = '<option value="">— 목표 코드 선택 —</option>';
+  for (const group of CHORD_SELECT_GROUPS) {
+    const keys = group.keys.filter((key) => CHORDS[key]);
+    if (!keys.length) continue;
+
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = group.label;
+
+    for (const key of keys) {
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = CHORDS[key].name;
+      optgroup.appendChild(option);
+    }
+
+    els.chordSelect.appendChild(optgroup);
+  }
+}
+
+populateChordSelect();
+
 // ── 상태 ──
 let handLandmarker = null; // 모델 인스턴스
 let modelReady = false;
@@ -253,7 +251,7 @@ video.classList.toggle("mirrored", MIRROR);
 const CALIB_KEY = "guitar-fret-calib-v2";
 const calib = {
   active: false,   // 보정 클릭 수집 중인지
-  K: 5,            // 기준 프렛
+  K: 6,            // 기준 프렛
   mode: "corners", // "corners"(4점 빠름) | "multi"(프렛별 정밀)
   clickPts: [],    // 수집 중: {x,y(정규화), u,v(지판좌표)}
   targets: [],     // 클릭 순서별 기대 지판좌표 {u,v,n,side}

@@ -1,0 +1,486 @@
+{
+  "version": 1,
+  "basePath": "/chords",
+  "items": [
+    {
+      "id": "a_dominant7",
+      "root": "A",
+      "quality": "dominant7",
+      "title": "A7",
+      "imageSrc": "/chords/dominant7/a.png",
+      "sourceFile": "코드 Source/7th/A7(크몽)[템플릿].png"
+    },
+    {
+      "id": "a_major",
+      "root": "A",
+      "quality": "major",
+      "title": "A major",
+      "imageSrc": "/chords/major/a.png",
+      "sourceFile": "코드 Source/Major/A(크몽)[템플릿].png"
+    },
+    {
+      "id": "a_major7",
+      "root": "A",
+      "quality": "major7",
+      "title": "A Major 7",
+      "imageSrc": "/chords/major7/a.png",
+      "sourceFile": "코드 Source/Major7th/AM7(크몽)[템플릿].png"
+    },
+    {
+      "id": "a_minor",
+      "root": "A",
+      "quality": "minor",
+      "title": "A minor",
+      "imageSrc": "/chords/minor/a.png",
+      "sourceFile": "코드 Source/minor/Am(크몽)[템플릿].png"
+    },
+    {
+      "id": "a_minor7",
+      "root": "A",
+      "quality": "minor7",
+      "title": "A minor7",
+      "imageSrc": "/chords/minor7/a.png",
+      "sourceFile": "코드 Source/minor7th/Am7(크몽)[템플릿].png"
+    },
+    {
+      "id": "a_sevenSus4",
+      "root": "A",
+      "quality": "sevenSus4",
+      "title": "A 7sus4",
+      "imageSrc": "/chords/seven-sus4/a.png",
+      "sourceFile": "코드 Source/7sus4/A7sus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "a_six",
+      "root": "A",
+      "quality": "six",
+      "title": "A6",
+      "imageSrc": "/chords/six/a.png",
+      "sourceFile": "코드 Source/6th/A6(크몽)[템플릿].png"
+    },
+    {
+      "id": "a_sus4",
+      "root": "A",
+      "quality": "sus4",
+      "title": "A sus4",
+      "imageSrc": "/chords/sus4/a.png",
+      "sourceFile": "코드 Source/sus4/Asus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "b_dominant7",
+      "root": "B",
+      "quality": "dominant7",
+      "title": "B7",
+      "imageSrc": "/chords/dominant7/b.png",
+      "sourceFile": "코드 Source/7th/B7(크몽)[템플릿].png"
+    },
+    {
+      "id": "b_major",
+      "root": "B",
+      "quality": "major",
+      "title": "B major",
+      "imageSrc": "/chords/major/b.png",
+      "sourceFile": "코드 Source/Major/B(크몽)[템플릿].png"
+    },
+    {
+      "id": "b_major7",
+      "root": "B",
+      "quality": "major7",
+      "title": "B Major 7",
+      "imageSrc": "/chords/major7/b.png",
+      "sourceFile": "코드 Source/Major7th/BM7(크몽)[템플릿].png"
+    },
+    {
+      "id": "b_minor",
+      "root": "B",
+      "quality": "minor",
+      "title": "B minor",
+      "imageSrc": "/chords/minor/b.png",
+      "sourceFile": "코드 Source/minor/Bm(크몽)[템플릿].png"
+    },
+    {
+      "id": "b_minor7",
+      "root": "B",
+      "quality": "minor7",
+      "title": "B minor7",
+      "imageSrc": "/chords/minor7/b.png",
+      "sourceFile": "코드 Source/minor7th/Bm7(크몽)[템플릿].png"
+    },
+    {
+      "id": "b_sevenSus4",
+      "root": "B",
+      "quality": "sevenSus4",
+      "title": "B 7sus4",
+      "imageSrc": "/chords/seven-sus4/b.png",
+      "sourceFile": "코드 Source/7sus4/B7sus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "b_six",
+      "root": "B",
+      "quality": "six",
+      "title": "B6",
+      "imageSrc": "/chords/six/b.png",
+      "sourceFile": "코드 Source/6th/B6(크몽)[템플릿].png"
+    },
+    {
+      "id": "b_sus4",
+      "root": "B",
+      "quality": "sus4",
+      "title": "B sus4",
+      "imageSrc": "/chords/sus4/b.png",
+      "sourceFile": "코드 Source/sus4/Bsus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "c_dominant7",
+      "root": "C",
+      "quality": "dominant7",
+      "title": "C7",
+      "imageSrc": "/chords/dominant7/c.png",
+      "sourceFile": "코드 Source/7th/C7(크몽)[템플릿].png"
+    },
+    {
+      "id": "c_major",
+      "root": "C",
+      "quality": "major",
+      "title": "C major",
+      "imageSrc": "/chords/major/c.png",
+      "sourceFile": "코드 Source/Major/C(크몽)[템플릿].png"
+    },
+    {
+      "id": "c_major7",
+      "root": "C",
+      "quality": "major7",
+      "title": "C Major 7",
+      "imageSrc": "/chords/major7/c.png",
+      "sourceFile": "코드 Source/Major7th/CM7(크몽)[템플릿].png"
+    },
+    {
+      "id": "c_minor",
+      "root": "C",
+      "quality": "minor",
+      "title": "C minor",
+      "imageSrc": "/chords/minor/c.png",
+      "sourceFile": "코드 Source/minor/Cm(크몽)[템플릿].png"
+    },
+    {
+      "id": "c_minor7",
+      "root": "C",
+      "quality": "minor7",
+      "title": "C minor7",
+      "imageSrc": "/chords/minor7/c.png",
+      "sourceFile": "코드 Source/minor7th/Cm7(크몽)[템플릿].png"
+    },
+    {
+      "id": "c_sevenSus4",
+      "root": "C",
+      "quality": "sevenSus4",
+      "title": "C 7sus4",
+      "imageSrc": "/chords/seven-sus4/c.png",
+      "sourceFile": "코드 Source/7sus4/C7sus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "c_six",
+      "root": "C",
+      "quality": "six",
+      "title": "C6",
+      "imageSrc": "/chords/six/c.png",
+      "sourceFile": "코드 Source/6th/C6(크몽)[템플릿].png"
+    },
+    {
+      "id": "c_sus4",
+      "root": "C",
+      "quality": "sus4",
+      "title": "C sus4",
+      "imageSrc": "/chords/sus4/c.png",
+      "sourceFile": "코드 Source/sus4/Csus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "c-sharp_minor",
+      "root": "C#",
+      "quality": "minor",
+      "title": "C# minor",
+      "imageSrc": "/chords/minor/c-sharp.png",
+      "sourceFile": "코드 Source/ETC/C#m(크몽)[템플릿].png"
+    },
+    {
+      "id": "c-sharp_minor7",
+      "root": "C#",
+      "quality": "minor7",
+      "title": "C# minor7",
+      "imageSrc": "/chords/minor7/c-sharp.png",
+      "sourceFile": "코드 Source/ETC/C#m7(크몽)[템플릿].png"
+    },
+    {
+      "id": "d_dominant7",
+      "root": "D",
+      "quality": "dominant7",
+      "title": "D7",
+      "imageSrc": "/chords/dominant7/d.png",
+      "sourceFile": "코드 Source/7th/D7(크몽)[템플릿].png"
+    },
+    {
+      "id": "d_major",
+      "root": "D",
+      "quality": "major",
+      "title": "D major",
+      "imageSrc": "/chords/major/d.png",
+      "sourceFile": "코드 Source/Major/D(크몽)[템플릿].png"
+    },
+    {
+      "id": "d_major7",
+      "root": "D",
+      "quality": "major7",
+      "title": "D Major 7",
+      "imageSrc": "/chords/major7/d.png",
+      "sourceFile": "코드 Source/Major7th/DM7(크몽)[템플릿].png"
+    },
+    {
+      "id": "d_minor",
+      "root": "D",
+      "quality": "minor",
+      "title": "D minor",
+      "imageSrc": "/chords/minor/d.png",
+      "sourceFile": "코드 Source/minor/Dm(크몽)[템플릿].png"
+    },
+    {
+      "id": "d_minor7",
+      "root": "D",
+      "quality": "minor7",
+      "title": "D minor7",
+      "imageSrc": "/chords/minor7/d.png",
+      "sourceFile": "코드 Source/minor7th/Dm7(크몽)[템플릿].png"
+    },
+    {
+      "id": "d_sevenSus4",
+      "root": "D",
+      "quality": "sevenSus4",
+      "title": "D 7sus4",
+      "imageSrc": "/chords/seven-sus4/d.png",
+      "sourceFile": "코드 Source/7sus4/D7sus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "d_six",
+      "root": "D",
+      "quality": "six",
+      "title": "D6",
+      "imageSrc": "/chords/six/d.png",
+      "sourceFile": "코드 Source/6th/D6(크몽)[템플릿].png"
+    },
+    {
+      "id": "d_sus4",
+      "root": "D",
+      "quality": "sus4",
+      "title": "D sus4",
+      "imageSrc": "/chords/sus4/d.png",
+      "sourceFile": "코드 Source/sus4/Dsus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "e_dominant7",
+      "root": "E",
+      "quality": "dominant7",
+      "title": "E7",
+      "imageSrc": "/chords/dominant7/e.png",
+      "sourceFile": "코드 Source/7th/E7(크몽)[템플릿].png"
+    },
+    {
+      "id": "e_major",
+      "root": "E",
+      "quality": "major",
+      "title": "E major",
+      "imageSrc": "/chords/major/e.png",
+      "sourceFile": "코드 Source/Major/E(크몽)[템플릿].png"
+    },
+    {
+      "id": "e_major7",
+      "root": "E",
+      "quality": "major7",
+      "title": "E Major 7",
+      "imageSrc": "/chords/major7/e.png",
+      "sourceFile": "코드 Source/Major7th/EM7(크몽)[템플릿].png"
+    },
+    {
+      "id": "e_minor",
+      "root": "E",
+      "quality": "minor",
+      "title": "E minor",
+      "imageSrc": "/chords/minor/e.png",
+      "sourceFile": "코드 Source/minor/Em(크몽)[템플릿].png"
+    },
+    {
+      "id": "e_minor7",
+      "root": "E",
+      "quality": "minor7",
+      "title": "E minor7",
+      "imageSrc": "/chords/minor7/e.png",
+      "sourceFile": "코드 Source/minor7th/Em7(크몽)[템플릿].png"
+    },
+    {
+      "id": "e_sevenSus4",
+      "root": "E",
+      "quality": "sevenSus4",
+      "title": "E 7sus4",
+      "imageSrc": "/chords/seven-sus4/e.png",
+      "sourceFile": "코드 Source/7sus4/E7sus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "e_six",
+      "root": "E",
+      "quality": "six",
+      "title": "E6",
+      "imageSrc": "/chords/six/e.png",
+      "sourceFile": "코드 Source/6th/E6(크몽)[템플릿].png"
+    },
+    {
+      "id": "e_sus4",
+      "root": "E",
+      "quality": "sus4",
+      "title": "E sus4",
+      "imageSrc": "/chords/sus4/e.png",
+      "sourceFile": "코드 Source/sus4/Esus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "f_dominant7",
+      "root": "F",
+      "quality": "dominant7",
+      "title": "F7",
+      "imageSrc": "/chords/dominant7/f.png",
+      "sourceFile": "코드 Source/7th/F7(크몽)[템플릿].png"
+    },
+    {
+      "id": "f_major",
+      "root": "F",
+      "quality": "major",
+      "title": "F major",
+      "imageSrc": "/chords/major/f.png",
+      "sourceFile": "코드 Source/Major/F(크몽)[템플릿].png"
+    },
+    {
+      "id": "f_major7",
+      "root": "F",
+      "quality": "major7",
+      "title": "F Major 7",
+      "imageSrc": "/chords/major7/f.png",
+      "sourceFile": "코드 Source/Major7th/FM7(크몽)[템플릿].png"
+    },
+    {
+      "id": "f_minor",
+      "root": "F",
+      "quality": "minor",
+      "title": "F minor",
+      "imageSrc": "/chords/minor/f.png",
+      "sourceFile": "코드 Source/minor/Fm(크몽)[템플릿].png"
+    },
+    {
+      "id": "f_minor7",
+      "root": "F",
+      "quality": "minor7",
+      "title": "F minor7",
+      "imageSrc": "/chords/minor7/f.png",
+      "sourceFile": "코드 Source/minor7th/Fm7(크몽)[템플릿].png"
+    },
+    {
+      "id": "f_sevenSus4",
+      "root": "F",
+      "quality": "sevenSus4",
+      "title": "F 7sus4",
+      "imageSrc": "/chords/seven-sus4/f.png",
+      "sourceFile": "코드 Source/7sus4/F7sus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "f_six",
+      "root": "F",
+      "quality": "six",
+      "title": "F6",
+      "imageSrc": "/chords/six/f.png",
+      "sourceFile": "코드 Source/6th/F6(크몽)[템플릿].png"
+    },
+    {
+      "id": "f_sus4",
+      "root": "F",
+      "quality": "sus4",
+      "title": "F sus4",
+      "imageSrc": "/chords/sus4/f.png",
+      "sourceFile": "코드 Source/sus4/Fsus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "f-sharp_minor",
+      "root": "F#",
+      "quality": "minor",
+      "title": "F# minor",
+      "imageSrc": "/chords/minor/f-sharp.png",
+      "sourceFile": "코드 Source/ETC/F#m(크몽)[템플릿].png"
+    },
+    {
+      "id": "f-sharp_minor7",
+      "root": "F#",
+      "quality": "minor7",
+      "title": "F# minor7",
+      "imageSrc": "/chords/minor7/f-sharp.png",
+      "sourceFile": "코드 Source/ETC/F#m7(크몽)[템플릿].png"
+    },
+    {
+      "id": "g_dominant7",
+      "root": "G",
+      "quality": "dominant7",
+      "title": "G7",
+      "imageSrc": "/chords/dominant7/g.png",
+      "sourceFile": "코드 Source/7th/G7(크몽)[템플릿].png"
+    },
+    {
+      "id": "g_major",
+      "root": "G",
+      "quality": "major",
+      "title": "G major",
+      "imageSrc": "/chords/major/g.png",
+      "sourceFile": "코드 Source/Major/G(크몽)[템플릿].png"
+    },
+    {
+      "id": "g_major7",
+      "root": "G",
+      "quality": "major7",
+      "title": "G Major 7",
+      "imageSrc": "/chords/major7/g.png",
+      "sourceFile": "코드 Source/Major7th/GM7(크몽)[템플릿].png"
+    },
+    {
+      "id": "g_minor",
+      "root": "G",
+      "quality": "minor",
+      "title": "G minor",
+      "imageSrc": "/chords/minor/g.png",
+      "sourceFile": "코드 Source/minor/Gm(크몽)[템플릿].png"
+    },
+    {
+      "id": "g_minor7",
+      "root": "G",
+      "quality": "minor7",
+      "title": "G minor7",
+      "imageSrc": "/chords/minor7/g.png",
+      "sourceFile": "코드 Source/minor7th/Gm7(크몽)[템플릿].png"
+    },
+    {
+      "id": "g_sevenSus4",
+      "root": "G",
+      "quality": "sevenSus4",
+      "title": "G 7sus4",
+      "imageSrc": "/chords/seven-sus4/g.png",
+      "sourceFile": "코드 Source/7sus4/G7sus4(크몽)[템플릿].png"
+    },
+    {
+      "id": "g_six",
+      "root": "G",
+      "quality": "six",
+      "title": "G6",
+      "imageSrc": "/chords/six/g.png",
+      "sourceFile": "코드 Source/6th/G6(크몽)[템플릿].png"
+    },
+    {
+      "id": "g_sus4",
+      "root": "G",
+      "quality": "sus4",
+      "title": "G sus4",
+      "imageSrc": "/chords/sus4/g.png",
+      "sourceFile": "코드 Source/sus4/Gsus4(크몽)[템플릿].png"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 320" role="img" aria-label="Chord placeholder">
+  <rect width="560" height="320" rx="18" fill="#fffefe"/>
+  <text x="280" y="150" text-anchor="middle" fill="#9ca3af" font-family="Arial, sans-serif" font-size="24" font-weight="700">Chord image unavailable</text>
+  <text x="280" y="188" text-anchor="middle" fill="#10b981" font-family="Arial, sans-serif" font-size="18" font-weight="700">dynamic SVG fallback is active</text>
+</svg>
