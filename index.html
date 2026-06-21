@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>기타 코드 운지 교정기 — Phase 0~1</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>🎸 기타 코드 운지 교정기</h1>
+    <span class="phase-badge">Phase 0~1 · 웹캠 + 손 추적</span>
+  </header>
+
+  <main class="layout">
+    <!-- 좌: 카메라 무대 -->
+    <section class="stage-wrap">
+      <div class="stage" id="stage">
+        <!-- 비디오: 거울 모드일 때 CSS로 좌우 반전 -->
+        <video id="video" class="mirrored" playsinline muted></video>
+        <!-- 오버레이 캔버스: 비디오와 정확히 겹침 (반전하지 않음 → 텍스트 정상) -->
+        <canvas id="overlay"></canvas>
+
+        <!-- 상태/로딩 오버레이 -->
+        <div id="overlayMsg" class="overlay-msg">
+          <p>아래 <b>카메라 시작</b>을 눌러주세요.</p>
+        </div>
+
+        <!-- 좌상단 HUD -->
+        <div class="hud" id="hud" hidden>
+          <span id="fps">FPS --</span>
+          <span id="handCount">손 0개</span>
+        </div>
+
+        <!-- 지판 보정 안내 배너 (보정 중에만 표시, 클릭은 통과) -->
+        <div id="calibBanner" class="calib-banner" hidden></div>
+      </div>
+
+      <p class="hint">
+        💡 팁: 손가락 끝이 카메라에 잘 보이도록 밝은 곳에서, 손바닥/손등이 카메라를 향하게 하세요.
+        기타 운지 인식(Phase 2~)에서는 카메라를 <b>지판 정면</b>에 두는 것이 가장 정확합니다.
+      </p>
+    </section>
+
+    <!-- 우: 컨트롤 패널 -->
+    <aside class="panel">
+      <div class="control-group">
+        <button id="startBtn" class="btn primary">▶ 카메라 시작</button>
+        <button id="stopBtn" class="btn" disabled>■ 정지</button>
+      </div>
+
+      <div class="control-group">
+        <label class="field-label" for="cameraSelect">카메라 장치</label>
+        <select id="cameraSelect" disabled>
+          <option value="">(카메라 시작 후 선택 가능)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label class="toggle">
+          <input type="checkbox" id="mirrorToggle" checked />
+          <span>거울 모드 (셀카처럼 좌우 반전)</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="skeletonToggle" checked />
+          <span>손 골격 표시</span>
+        </label>
+      </div>
+
+      <div class="control-group">
+        <div class="calib-row">
+          <label class="field-label" for="fretCount">기준 프렛 K</label>
+          <input type="number" id="fretCount" min="3" max="12" value="5" />
+        </div>
+        <div class="calib-row">
+          <label class="field-label" for="calibMode">보정 방식</label>
+          <select id="calibMode">
+            <option value="corners">빠름 (4점)</option>
+            <option value="multi">정밀 (프렛별)</option>
+          </select>
+        </div>
+        <button id="calibBtn" class="btn">🎯 지판 보정 시작</button>
+        <button id="calibClearBtn" class="btn" disabled>보정 지우기</button>
+        <label class="toggle">
+          <input type="checkbox" id="gridToggle" checked />
+          <span>지판 격자 표시</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="fingerLabelToggle" checked />
+          <span>운지 라벨 표시 (줄·프렛)</span>
+        </label>
+      </div>
+
+      <div class="judge-card">
+        <h2>코드 판정 (Phase 4)</h2>
+        <div class="judge-head">
+          <select id="chordSelect">
+            <option value="">— 목표 코드 선택 —</option>
+            <optgroup label="기본">
+              <option value="C">C</option>
+              <option value="G">G</option>
+              <option value="D">D</option>
+              <option value="A">A</option>
+              <option value="E">E</option>
+              <option value="Am">Am</option>
+              <option value="Em">Em</option>
+              <option value="Dm">Dm</option>
+            </optgroup>
+            <optgroup label="세븐스">
+              <option value="A7">A7</option>
+              <option value="D7">D7</option>
+              <option value="E7">E7</option>
+              <option value="G7">G7</option>
+              <option value="C7">C7</option>
+            </optgroup>
+            <optgroup label="기타">
+              <option value="Cadd9">Cadd9</option>
+            </optgroup>
+            <optgroup label="바레 (고급)">
+              <option value="F">F</option>
+              <option value="Bm">Bm</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="calib-row" style="margin-bottom: 10px">
+          <label class="field-label" for="capo">카포 (프렛)</label>
+          <input type="number" id="capo" min="0" max="7" value="0" />
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="strictFingerToggle" />
+          <span>손가락 번호까지 검사 (엄격)</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="smoothToggle" checked />
+          <span>손떨림 보정 (스무딩)</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="voiceToggle" />
+          <span>음성 코칭 🔊</span>
+        </label>
+        <div id="judgeBody"><p class="dim">목표 코드를 선택하세요</p></div>
+      </div>
+
+      <div class="status-card" id="statusCard">
+        <h2>상태</h2>
+        <ul>
+          <li>모델: <b id="modelStatus">초기화 대기</b></li>
+          <li>카메라: <b id="camStatus">정지됨</b></li>
+          <li>해상도: <b id="resStatus">--</b></li>
+          <li>지판 보정: <b id="calibStatus">안 됨</b></li>
+        </ul>
+      </div>
+
+      <div class="readout-card">
+        <h2>운지 인식 (Phase 3)</h2>
+        <ul id="fingerReadout"><li class="dim">지판 보정 후 손끝을 지판에 올리면 표시됩니다</li></ul>
+      </div>
+
+      <div class="legend">
+        <h2>범례</h2>
+        <p><span class="dot tip"></span> 손가락 끝 (운지 판정 기준점)</p>
+        <p><span class="dot joint"></span> 관절</p>
+        <p><span class="line"></span> 손 골격</p>
+      </div>
+
+      <details class="next-steps">
+        <summary>다음 단계 (Phase 2~)</summary>
+        <ol>
+          <li>지판 4모서리 클릭 → 원근 보정(homography)</li>
+          <li>손끝 → (줄, 프렛) 좌표 매핑</li>
+          <li>목표 코드와 비교 · 교정 피드백</li>
+        </ol>
+      </details>
+    </aside>
+  </main>
+
+  <!-- 에러 토스트 -->
+  <div id="errorBox" class="error-box" hidden>
+    <span id="errorText"></span>
+    <button id="errorClose" aria-label="닫기">✕</button>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
