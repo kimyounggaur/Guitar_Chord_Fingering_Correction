@@ -292,6 +292,14 @@ select:disabled { opacity: 0.5; }
 .judge-corr { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
 .judge-corr h3 { margin: 0 0 6px; font-size: 12px; color: var(--primary); text-transform: none; letter-spacing: 0; }
 .judge-corr.ok { color: var(--ok); font-weight: 600; }
+.posture-warn {
+  display: inline-flex;
+  align-items: center;
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 
 /* ── 운지 인식 readout ── */
 .readout-card {

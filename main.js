@@ -38,6 +38,14 @@ const FRET_FINGERS = [
   { idx: 20, finger: "4" },
 ];
 const FINGER_NAMES = { "1": "검지", "2": "중지", "3": "약지", "4": "새끼", T: "엄지" };
+const FINGER_JOINTS = {
+  "1": { mcp: 5, pip: 6, dip: 7, tip: 8 },
+  "2": { mcp: 9, pip: 10, dip: 11, tip: 12 },
+  "3": { mcp: 13, pip: 14, dip: 15, tip: 16 },
+  "4": { mcp: 17, pip: 18, dip: 19, tip: 20 },
+};
+const POSTURE_FLAT_PIP_DEG = 166;
+const POSTURE_FLAT_DIP_DEG = 162;
 
 // Phase 4: 코드 운지 데이터
 //  줄 1=얇은 고음E … 6=굵은 저음E. fret: 0=개방, 'x'=뮤트, 양수=프렛. finger: '1'~'4'/null.
@@ -204,6 +212,7 @@ const els = {
   judgeBody: $("judgeBody"),
   // Phase 5
   smoothToggle: $("smoothToggle"),
+  postureToggle: $("postureToggle"),
   voiceToggle: $("voiceToggle"),
 };
 
@@ -510,6 +519,45 @@ function vToString(v) {
   return 6 - s;
 }
 
+function angleDeg(a, b, c) {
+  if (!a || !b || !c) return null;
+  const zA = Number.isFinite(a.z) ? a.z : 0;
+  const zB = Number.isFinite(b.z) ? b.z : 0;
+  const zC = Number.isFinite(c.z) ? c.z : 0;
+  const ab = { x: a.x - b.x, y: a.y - b.y, z: zA - zB };
+  const cb = { x: c.x - b.x, y: c.y - b.y, z: zC - zB };
+  const abLen = Math.hypot(ab.x, ab.y, ab.z);
+  const cbLen = Math.hypot(cb.x, cb.y, cb.z);
+  if (!(abLen > 0) || !(cbLen > 0)) return null;
+  const cos = (ab.x * cb.x + ab.y * cb.y + ab.z * cb.z) / (abLen * cbLen);
+  return Math.acos(Math.max(-1, Math.min(1, cos))) * 180 / Math.PI;
+}
+
+function analyzeFingerPosture(landmarks, finger) {
+  const joints = FINGER_JOINTS[finger];
+  if (!joints) return null;
+  const mcp = landmarks[joints.mcp];
+  const pip = landmarks[joints.pip];
+  const dip = landmarks[joints.dip];
+  const tip = landmarks[joints.tip];
+  const pipAngle = angleDeg(mcp, pip, dip);
+  const dipAngle = angleDeg(pip, dip, tip);
+  const risk =
+    pipAngle != null &&
+    dipAngle != null &&
+    pipAngle >= POSTURE_FLAT_PIP_DEG &&
+    dipAngle >= POSTURE_FLAT_DIP_DEG;
+
+  return {
+    pipAngle,
+    dipAngle,
+    risk,
+    message: risk
+      ? `${FINGER_NAMES[finger] || finger} 손끝이 누워 있어 주변 줄 뮤트 위험이 있습니다`
+      : "",
+  };
+}
+
 // 모든 손의 운지 손끝을 지판좌표로 변환. onBoard=지판 위 유효 위치.
 function mapFingertips(hands, results, H, t) {
   const out = [];
@@ -529,7 +577,8 @@ function mapFingertips(hands, results, H, t) {
       const fr = uToFret(f.x, H.K);
       const onBoard =
         string != null && fr.fret != null && fr.fret >= 1 && fr.fret <= H.K;
-      out.push({ finger, hand, u: f.x, v: f.y, string, fret: fr.fret, onBoard, disp });
+      const posture = els.postureToggle.checked ? analyzeFingerPosture(landmarks, finger) : null;
+      out.push({ finger, hand, u: f.x, v: f.y, string, fret: fr.fret, onBoard, disp, posture });
     }
   });
   return out;
@@ -567,7 +616,9 @@ function updateFingerReadout(detected) {
       html = onBoard
         .map(
           (d) =>
-            `<li><b>${FINGER_NAMES[d.finger] || d.finger}</b> → ${d.string}번줄 ${d.fret}프렛</li>`
+            `<li><b>${FINGER_NAMES[d.finger] || d.finger}</b> → ${d.string}번줄 ${d.fret}프렛${
+              d.posture && d.posture.risk ? ' <span class="posture-warn">손끝 각도</span>' : ""
+            }</li>`
         )
         .join("");
     }
@@ -634,7 +685,7 @@ function evaluateVoicing(detected, chord, options = {}) {
           status = "correct";
           correctCount++;
         } else status = d ? "wrong_position" : "missing";
-        notes.push({ string: r.string, fret: r.fret, finger: r.finger, status, detected: barreOk ? d : d || null, barre: true });
+        notes.push({ string: r.string, fret: r.fret, finger: r.finger, status, detected: barreOk ? d : d || null, barre: true, posture: null });
       }
     } else {
       for (const r of grp) {
@@ -655,7 +706,15 @@ function evaluateVoicing(detected, chord, options = {}) {
             used.add(dI);
           } else status = "missing";
         }
-        notes.push({ string: r.string, fret: r.fret, finger: r.finger, status, detected: det, barre: false });
+        notes.push({
+          string: r.string,
+          fret: r.fret,
+          finger: r.finger,
+          status,
+          detected: det,
+          barre: false,
+          posture: det && det.posture && det.posture.risk ? det.posture : null,
+        });
       }
     }
   }
@@ -708,6 +767,9 @@ function buildCorrections(notes, extras) {
       const cur = FINGER_NAMES[n.detected.finger] || n.detected.finger;
       out.push(`${n.string}번줄 ${n.fret}프렛은 ${name}로 짚으세요 (지금 ${cur})`);
     }
+    if ((n.status === "correct" || n.status === "wrong_finger") && n.posture && n.posture.risk) {
+      out.push(`${name} 손끝을 조금 더 세워 ${n.string}번줄 ${n.fret}프렛을 누르세요 (주변 줄 뮤트 위험)`);
+    }
   }
   for (const e of extras) {
     const name = FINGER_NAMES[e.finger] || e.finger;
@@ -752,7 +814,8 @@ function renderJudgePanel(chordKey, res) {
     res.notes
       .map((n) => {
         const name = FINGER_NAMES[n.finger] || n.finger;
-        return `<li>${STATUS_ICON[n.status] || "•"} ${n.string}번줄 ${n.fret}프렛 <span class="dim">(${name})</span></li>`;
+        const postureBadge = n.posture && n.posture.risk ? ' <span class="posture-warn">손끝 각도</span>' : "";
+        return `<li>${STATUS_ICON[n.status] || "•"} ${n.string}번줄 ${n.fret}프렛 <span class="dim">(${name})</span>${postureBadge}</li>`;
       })
       .join("") +
     "</ul>";
@@ -884,7 +947,7 @@ function drawCorrectionOverlay(judge, H) {
   for (const n of judge.notes) {
     const P = pressPoint(n.string, n.fret, H);
     if (n.status === "correct") {
-      if (n.detected) tipStatus.set(n.detected, COLOR_OK);
+      if (n.detected) tipStatus.set(n.detected, n.posture && n.posture.risk ? COLOR_WARN : COLOR_OK);
     } else if (n.status === "wrong_finger") {
       if (n.detected) tipStatus.set(n.detected, COLOR_WARN); // 위치는 맞음 → 화살표 없이 경고
     } else if (n.status === "wrong_position") {
@@ -1673,6 +1736,7 @@ stage.addEventListener("click", onStageClick);
 // Phase 4/6: 코드 판정 컨트롤 (정지/일시정지 중에는 목표 코드만 표시)
 els.chordSelect.addEventListener("change", () => renderJudgePanel(els.chordSelect.value, null));
 els.strictFingerToggle.addEventListener("change", () => renderJudgePanel(els.chordSelect.value, null));
+els.postureToggle.addEventListener("change", () => renderJudgePanel(els.chordSelect.value, null));
 els.capo.addEventListener("change", () => renderJudgePanel(els.chordSelect.value, null));
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && calib.active) cancelCalibration();
