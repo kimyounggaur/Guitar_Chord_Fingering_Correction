@@ -15,6 +15,10 @@ import {
   HandLandmarker,
   FilesetResolver,
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
+import { classifyFingerContact } from "./src/contact-classifier.js";
+import { ContactSmootherRegistry } from "./src/temporal-state.js";
+import { evaluateCameraGuide, sampleVideoQuality } from "./src/camera-guide.js";
+import { scoreFingeringPrior } from "./src/fingering-prior.js";
 
 // MediaPipe CDN 자원
 const WASM_PATH = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
@@ -212,8 +216,12 @@ const els = {
   judgeBody: $("judgeBody"),
   // Phase 5
   smoothToggle: $("smoothToggle"),
+  contactClassifierToggle: $("contactClassifierToggle"),
+  cameraGuideToggle: $("cameraGuideToggle"),
+  fingeringPriorToggle: $("fingeringPriorToggle"),
   postureToggle: $("postureToggle"),
   voiceToggle: $("voiceToggle"),
+  cameraGuideBody: $("cameraGuideBody"),
 };
 
 function populateChordSelect() {
@@ -274,6 +282,12 @@ let detectedFingers = [];
 let lastReadoutHtml = "";
 // ── Phase 4: 코드 판정 ──
 let lastJudgeHtml = "";
+let lastGuideHtml = "";
+let lastGuideSampleAt = 0;
+let lastVideoQuality = null;
+const contactSmoothers = new ContactSmootherRegistry();
+const contactTipHistory = new Map();
+let contactFrameId = 0;
 
 // FPS 측정
 let fpsLast = performance.now();
@@ -430,7 +444,13 @@ function computeHomographies(saved) {
   const img2fret = exact ? computeHomography(disp, fret) : computeHomographyLS(disp, fret);
   const fret2img = exact ? computeHomography(fret, disp) : computeHomographyLS(fret, disp);
   if (!img2fret || !fret2img) return null;
-  return { img2fret, fret2img, K };
+  const corners = [
+    applyHomography(fret2img, 0, 0),
+    applyHomography(fret2img, 0, 5),
+    applyHomography(fret2img, K, 5),
+    applyHomography(fret2img, K, 0),
+  ];
+  return { img2fret, fret2img, K, corners };
 }
 
 // =============================================================
@@ -578,7 +598,40 @@ function mapFingertips(hands, results, H, t) {
       const onBoard =
         string != null && fr.fret != null && fr.fret >= 1 && fr.fret <= H.K;
       const posture = els.postureToggle.checked ? analyzeFingerPosture(landmarks, finger) : null;
-      out.push({ finger, hand, u: f.x, v: f.y, string, fret: fr.fret, onBoard, disp, posture });
+      const contactKey = `${hi}:${idx}`;
+      const currentTip = { x: lm.x, y: lm.y, z: lm.z, t };
+      const previousTip = contactTipHistory.get(contactKey);
+      contactTipHistory.set(contactKey, currentTip);
+      const rawContact = els.contactClassifierToggle.checked
+        ? classifyFingerContact({
+            finger,
+            landmarks,
+            joints: FINGER_JOINTS[finger],
+            mapped: { onBoard, string, fret: fr.fret, u: f.x, v: f.y },
+            previousTip,
+            currentTip,
+            posture,
+          })
+        : { state: "pressed", confidence: 1, features: { reasonCodes: ["classifier_disabled"] } };
+      const contact = els.contactClassifierToggle.checked
+        ? contactSmoothers.update(contactKey, rawContact, t)
+        : { state: "pressed", confidence: 1, stableMs: 0, rawState: "pressed" };
+      out.push({
+        finger,
+        hand,
+        u: f.x,
+        v: f.y,
+        string,
+        fret: fr.fret,
+        onBoard,
+        disp,
+        posture,
+        contactState: contact.state,
+        contactConfidence: contact.confidence,
+        contactStableMs: contact.stableMs,
+        contactRawState: contact.rawState,
+        contactFeatures: rawContact.features,
+      });
     }
   });
   return out;
@@ -616,7 +669,7 @@ function updateFingerReadout(detected) {
       html = onBoard
         .map(
           (d) =>
-            `<li><b>${FINGER_NAMES[d.finger] || d.finger}</b> → ${d.string}번줄 ${d.fret}프렛${
+            `<li><b>${FINGER_NAMES[d.finger] || d.finger}</b> <span class="finger-pos">→ ${d.string}번줄 ${d.fret}프렛</span>${contactBadge(d)}${
               d.posture && d.posture.risk ? ' <span class="posture-warn">손끝 각도</span>' : ""
             }</li>`
         )
@@ -627,6 +680,16 @@ function updateFingerReadout(detected) {
     els.fingerReadout.innerHTML = html;
     lastReadoutHtml = html;
   }
+}
+
+function contactBadge(d) {
+  const state = d.contactState || "unknown";
+  const pct = Math.round((Number.isFinite(d.contactConfidence) ? d.contactConfidence : 0) * 100);
+  const label =
+    state === "pressed" ? `눌림 추정 ${pct}%` :
+    state === "hover" ? "눌림 불확실" :
+    state === "lifted" ? "떨어짐" : "불명";
+  return ` <span class="contact-badge ${state}">${label}</span>`;
 }
 
 // =============================================================
@@ -642,6 +705,8 @@ function voicingToString(chord) {
 //  options.capo: 카포 프렛(>0이면 운지 음을 그만큼 위로 이동). 바레(같은 손가락+프렛 2줄↑)도 처리.
 function evaluateVoicing(detected, chord, options = {}) {
   const strictFinger = !!options.strictFinger;
+  const useContactClassifier = !!options.useContactClassifier;
+  const useFingeringPrior = !!options.useFingeringPrior;
   const tol = options.fretTolerance || 0;
   const requireMute = !!options.requireMute;
   const capo = Math.max(0, options.capo || 0);
@@ -651,11 +716,15 @@ function evaluateVoicing(detected, chord, options = {}) {
     typeof v.fret === "number" && v.fret > 0 ? { ...v, fret: v.fret + capo } : v
   );
 
-  const onBoard = detected.filter((d) => d.onBoard && d.string != null && d.fret != null);
+  const validDetected = detected.filter((d) => d.onBoard && d.string != null && d.fret != null);
+  const onBoard = validDetected.filter((d) => !useContactClassifier || d.contactState === "pressed");
+  const hovering = validDetected.filter((d) => useContactClassifier && d.contactState === "hover");
   const byFinger = {}; // 손가락 번호별 대표 검출(첫 onBoard)
   for (const d of onBoard) if (!(d.finger in byFinger)) byFinger[d.finger] = d;
   const fingerAt = (string, fret) =>
     onBoard.find((d) => d.string === string && Math.abs(d.fret - fret) <= tol);
+  const hoverAt = (string, fret, finger = null) =>
+    hovering.find((d) => d.string === string && Math.abs(d.fret - fret) <= tol && (!finger || d.finger === finger));
 
   const required = voicing.filter((v) => typeof v.fret === "number" && v.fret > 0);
 
@@ -677,6 +746,7 @@ function evaluateVoicing(detected, chord, options = {}) {
       const fret = grp[0].fret;
       const finger = grp[0].finger;
       const d = byFinger[finger];
+      const h = hovering.find((x) => x.finger === finger && Math.abs(x.fret - fret) <= tol);
       const barreOk = d && Math.abs(d.fret - fret) <= tol;
       if (barreOk) used.add(d);
       for (const r of grp) {
@@ -684,12 +754,13 @@ function evaluateVoicing(detected, chord, options = {}) {
         if (barreOk) {
           status = "correct";
           correctCount++;
-        } else status = d ? "wrong_position" : "missing";
-        notes.push({ string: r.string, fret: r.fret, finger: r.finger, status, detected: barreOk ? d : d || null, barre: true, posture: null });
+        } else status = h ? "not_pressed" : d ? "wrong_position" : "missing";
+        notes.push({ string: r.string, fret: r.fret, finger: r.finger, status, detected: barreOk ? d : h || d || null, barre: true, posture: null });
       }
     } else {
       for (const r of grp) {
         const pos = fingerAt(r.string, r.fret);
+        const hover = hoverAt(r.string, r.fret);
         let status, det = null;
         if (pos) {
           det = pos;
@@ -698,6 +769,9 @@ function evaluateVoicing(detected, chord, options = {}) {
             correctCount++;
           } else status = "wrong_finger";
           used.add(pos);
+        } else if (hover) {
+          status = "not_pressed";
+          det = hover;
         } else {
           const dI = byFinger[r.finger];
           if (dI) {
@@ -734,6 +808,9 @@ function evaluateVoicing(detected, chord, options = {}) {
 
   const total = required.length;
   const isCorrect = correctCount === total && extras.length === 0;
+  const prior = useFingeringPrior
+    ? scoreFingeringPrior({ chord, capo, detectedFingers: detected, useContactClassifier, strictFinger })
+    : { score: 1, violations: [], suggestions: [], fingerAdjustments: {} };
   return {
     score: total ? correctCount / total : 1,
     correctCount,
@@ -741,11 +818,12 @@ function evaluateVoicing(detected, chord, options = {}) {
     isCorrect,
     notes,
     extras,
-    corrections: buildCorrections(notes, extras),
+    prior,
+    corrections: buildCorrections(notes, extras, prior),
   };
 }
 
-function buildCorrections(notes, extras) {
+function buildCorrections(notes, extras, prior = null) {
   const out = [];
   const seenBarre = new Set();
   for (const n of notes) {
@@ -759,7 +837,9 @@ function buildCorrections(notes, extras) {
       }
       continue;
     }
-    if (n.status === "wrong_position" && n.detected) {
+    if (n.status === "not_pressed" && n.detected) {
+      out.push(`${name} 위치는 맞지만 눌림이 불확실합니다. ${n.string}번줄 ${n.fret}프렛을 더 안정적으로 누르세요`);
+    } else if (n.status === "wrong_position" && n.detected) {
       out.push(`${name}를 ${n.detected.string}번줄 ${n.detected.fret}프렛 → ${n.string}번줄 ${n.fret}프렛으로 옮기세요`);
     } else if (n.status === "missing") {
       out.push(`${name}로 ${n.string}번줄 ${n.fret}프렛을 짚으세요`);
@@ -775,6 +855,9 @@ function buildCorrections(notes, extras) {
     const name = FINGER_NAMES[e.finger] || e.finger;
     out.push(`${e.string}번줄은 ${e.targetState === "open" ? "개방현" : "뮤트"}이니 ${name}를 떼세요`);
   }
+  if (prior && prior.suggestions && prior.suggestions.length) {
+    out.push(...prior.suggestions.slice(0, 2));
+  }
   return out;
 }
 
@@ -785,7 +868,7 @@ function setJudgeHtml(html) {
   }
 }
 
-const STATUS_ICON = { correct: "✅", wrong_position: "⚠️", wrong_finger: "⚠️", missing: "❌" };
+const STATUS_ICON = { correct: "✅", wrong_position: "⚠️", wrong_finger: "⚠️", missing: "❌", not_pressed: "⚠️" };
 
 function renderJudgePanel(chordKey, res) {
   if (!chordKey || !CHORDS[chordKey]) {
@@ -808,6 +891,9 @@ function renderJudgePanel(chordKey, res) {
       : ' <span class="ok">✅ 정확합니다!</span>'
     : "";
   const scoreHtml = `<div class="judge-score">정확도 ${res.correctCount}/${res.total}${okBadge}</div>`;
+  const priorHtml = res.prior && res.prior.violations && res.prior.violations.length
+    ? `<div class="prior-warn">운지 문법 경고: ${res.prior.suggestions.slice(0, 2).join(" ")}</div>`
+    : "";
 
   const notesHtml =
     "<ul>" +
@@ -830,7 +916,7 @@ function renderJudgePanel(chordKey, res) {
     corrHtml = '<div class="judge-corr ok">👍 완벽해요!</div>';
   }
 
-  setJudgeHtml(target + scoreHtml + notesHtml + corrHtml);
+  setJudgeHtml(target + scoreHtml + priorHtml + notesHtml + corrHtml);
 }
 
 // =============================================================
@@ -958,6 +1044,9 @@ function drawCorrectionOverlay(judge, H) {
       drawDashedTarget(P.x, P.y, COLOR_WARN, FINGER_NAMES[n.finger]);
     } else if (n.status === "missing") {
       drawDashedTarget(P.x, P.y, COLOR_BAD, FINGER_NAMES[n.finger]);
+    } else if (n.status === "not_pressed") {
+      if (n.detected) tipStatus.set(n.detected, COLOR_WARN);
+      drawDashedTarget(P.x, P.y, COLOR_WARN, FINGER_NAMES[n.finger]);
     }
   }
   for (const e of judge.extras) if (e.det) tipStatus.set(e.det, COLOR_BAD);
@@ -1196,6 +1285,8 @@ function cancelCalibration() {
 function clearCalibration() {
   calib.saved = null;
   homography = null;
+  contactSmoothers.clear();
+  contactTipHistory.clear();
   try { localStorage.removeItem(CALIB_KEY); } catch (e) { /* 무시 */ }
   updateCalibStatus();
 }
@@ -1394,6 +1485,8 @@ function resetToStopped() {
   els.fingerReadout.innerHTML = '<li class="dim">지판 보정 후 손끝을 지판에 올리면 표시됩니다</li>';
   homography = null;
   tipFilters.clear();
+  contactSmoothers.clear();
+  contactTipHistory.clear();
   resetHold();
   if (window.speechSynthesis) window.speechSynthesis.cancel();
   lastJudgeHtml = "";
@@ -1514,6 +1607,43 @@ async function populateCameraList() {
   }
 }
 
+function setGuideHtml(html) {
+  if (!els.cameraGuideBody || html === lastGuideHtml) return;
+  els.cameraGuideBody.innerHTML = html;
+  lastGuideHtml = html;
+}
+
+function updateCameraGuide(hands, tSec) {
+  if (!els.cameraGuideBody) return;
+  if (!els.cameraGuideToggle.checked) {
+    setGuideHtml('<p class="dim">카메라 배치 가이드 꺼짐</p>');
+    return;
+  }
+  if (running && tSec - lastGuideSampleAt >= 0.7) {
+    lastGuideSampleAt = tSec;
+    lastVideoQuality = sampleVideoQuality(video) || lastVideoQuality;
+  }
+  const guide = evaluateCameraGuide({
+    video,
+    canvasWidth: canvas.width,
+    canvasHeight: canvas.height,
+    homography,
+    calib,
+    hands,
+    detectedFingers,
+    fps: fpsValue,
+    videoQuality: lastVideoQuality,
+  });
+  const checks = guide.checks
+    .filter((c) => c.severity !== "good")
+    .slice(0, 4);
+  const visibleChecks = checks.length ? checks : guide.checks.filter((c) => c.severity === "good").slice(0, 3);
+  const body = visibleChecks
+    .map((c) => `<li class="guide-check ${c.severity === "bad" ? "bad" : c.severity}"><b>${c.label}</b><span>${c.action}</span></li>`)
+    .join("");
+  setGuideHtml(`<div class="guide-head ${guide.level}">${guide.headline}</div><ul>${body}</ul>`);
+}
+
 // =============================================================
 // 렌더 루프
 // =============================================================
@@ -1563,13 +1693,18 @@ function renderLoop() {
   const tSec = performance.now() / 1000;
   if (homography) {
     smoothFrameId++;
+    contactFrameId++;
+    contactSmoothers.markFrame(contactFrameId);
     detectedFingers = mapFingertips(hands, latestResults, homography, tSec);
     // 이번 프레임에 갱신되지 않은(사라진 손) 필터 정리
     for (const [k, f] of tipFilters) if (f.seen !== smoothFrameId) tipFilters.delete(k);
+    contactSmoothers.sweepInactive(2);
     if (els.fingerLabelToggle.checked) drawFingerLabels(detectedFingers);
   } else {
     detectedFingers = [];
     if (tipFilters.size) tipFilters.clear();
+    contactSmoothers.clear();
+    contactTipHistory.clear();
   }
   updateFingerReadout(detectedFingers);
 
@@ -1579,6 +1714,8 @@ function renderLoop() {
   if (chordKey && CHORDS[chordKey] && homography) {
     judge = evaluateVoicing(detectedFingers, CHORDS[chordKey], {
       strictFinger: els.strictFingerToggle.checked,
+      useContactClassifier: els.contactClassifierToggle.checked,
+      useFingeringPrior: els.fingeringPriorToggle.checked,
       capo: Math.max(0, parseInt(els.capo.value, 10) || 0),
     });
   }
@@ -1589,6 +1726,7 @@ function renderLoop() {
     resetHold();
   }
   renderJudgePanel(chordKey, judge);
+  updateCameraGuide(hands, tSec);
 
   // 5) 보정 진행 중 클릭 마커(맨 위)
   if (calib.active) drawCalibInProgress();
@@ -1736,6 +1874,13 @@ stage.addEventListener("click", onStageClick);
 // Phase 4/6: 코드 판정 컨트롤 (정지/일시정지 중에는 목표 코드만 표시)
 els.chordSelect.addEventListener("change", () => renderJudgePanel(els.chordSelect.value, null));
 els.strictFingerToggle.addEventListener("change", () => renderJudgePanel(els.chordSelect.value, null));
+els.contactClassifierToggle.addEventListener("change", () => {
+  contactSmoothers.clear();
+  contactTipHistory.clear();
+  renderJudgePanel(els.chordSelect.value, null);
+});
+els.fingeringPriorToggle.addEventListener("change", () => renderJudgePanel(els.chordSelect.value, null));
+els.cameraGuideToggle.addEventListener("change", () => updateCameraGuide([], performance.now() / 1000));
 els.postureToggle.addEventListener("change", () => renderJudgePanel(els.chordSelect.value, null));
 els.capo.addEventListener("change", () => renderJudgePanel(els.chordSelect.value, null));
 window.addEventListener("keydown", (e) => {

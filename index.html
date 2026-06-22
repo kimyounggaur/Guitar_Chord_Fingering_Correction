@@ -111,6 +111,18 @@
           <span>손떨림 보정 (스무딩)</span>
         </label>
         <label class="toggle">
+          <input type="checkbox" id="contactClassifierToggle" checked />
+          <span>누름/떼기 추정 사용</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="fingeringPriorToggle" checked />
+          <span>운지 문법 prior</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="cameraGuideToggle" checked />
+          <span>카메라 배치 가이드</span>
+        </label>
+        <label class="toggle">
           <input type="checkbox" id="postureToggle" checked />
           <span>손끝 각도 경고</span>
         </label>
@@ -129,6 +141,11 @@
           <li>해상도: <b id="resStatus">--</b></li>
           <li>지판 보정: <b id="calibStatus">안 됨</b></li>
         </ul>
+      </div>
+
+      <div class="guide-card" id="cameraGuideCard">
+        <h2>카메라 배치 가이드</h2>
+        <div id="cameraGuideBody"><p class="dim">카메라 시작 후 분석합니다</p></div>
       </div>
 
       <div class="readout-card">

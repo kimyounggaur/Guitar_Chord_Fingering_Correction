@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "scripts": {
+    "test": "node tests/contact-classifier.test.mjs && node tests/temporal-state.test.mjs && node tests/camera-guide.test.mjs && node tests/fingering-prior.test.mjs"
+  }
+}
